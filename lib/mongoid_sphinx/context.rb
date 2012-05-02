@@ -50,9 +50,9 @@ class MongoidSphinx::Context
         rescue LoadError
           model_name.gsub!(/.*[\/\\]/, '').nil? ? next : retry
         rescue StandardError => err
-          STDERR.puts "Warning: Error loading #{file}:"
-          STDERR.puts err.message
-          STDERR.puts err.backtrace.join("\n"), ''
+          #STDERR.puts "Warning: Error loading #{file}:"
+          #STDERR.puts err.message
+          #STDERR.puts err.backtrace.join("\n"), ''
         end
       end
     end

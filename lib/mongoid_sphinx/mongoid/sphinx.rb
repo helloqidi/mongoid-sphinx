@@ -99,7 +99,7 @@ module Mongoid
 						if document.respond_to?(key.to_sym)
 							value = document.send(key)
 							value = value.join(",") if value.class == [].class
-							sphinx_string+="<#{key}>#{value.to_s.to_crc32}</#{key}>"
+							sphinx_string+="<#{key}>#{value.to_s}</#{key}>"
 						end
 					end
 					self.search_attributes.each do |key, value|
@@ -113,7 +113,7 @@ module Mongoid
 								document.send(key)
 						end
 						value = value.join(",") if value.class == [].class
-						sphinx_string+="<#{key}>#{value.to_s.to_crc32}</#{key}>"
+						sphinx_string+="<#{key}>#{value.to_s}</#{key}>"
 					end
 
 					sphinx_string+='</sphinx:document>'

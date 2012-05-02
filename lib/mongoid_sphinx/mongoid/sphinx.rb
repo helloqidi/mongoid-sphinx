@@ -98,7 +98,7 @@ module Mongoid
 						if document.respond_to?(key.to_sym)
 							value = document.send(key)
 							value = value.join(",") if value.class == [].class
-							puts "<#{key}>#{value.to_s.to_xs}</#{key}>"
+							puts "<#{key}>#{value.to_s.to_crc32}</#{key}>"
 						end
 					end
 					self.search_attributes.each do |key, value|
@@ -112,7 +112,7 @@ module Mongoid
 								document.send(key)
 						end
 						value = value.join(",") if value.class == [].class
-						puts "<#{key}>#{value.to_s.to_xs}</#{key}>"
+						puts "<#{key}>#{value.to_s.to_crc32}</#{key}>"
 					end
 
 					puts '</sphinx:document>'

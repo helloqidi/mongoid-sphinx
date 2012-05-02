@@ -37,24 +37,12 @@ class MongoidSphinx::Context
   #
   def load_models
     MongoidSphinx::Configuration.instance.model_directories.each do |base|
-      Dir["#{base}**/*.rb"].each do |file|
-        model_name = file.gsub(/^#{base}([\w_\/\\]+)\.rb/, '\1')
-
-        next if model_name.nil?
-        next if defined?(::ActiveRecord::Base) && ::ActiveRecord::Base.send(:descendants).detect { |model|
-          model.name == model_name.camelize
-        }
-
         begin
-          model_name.camelize.constantize
-        rescue LoadError
-          model_name.gsub!(/.*[\/\\]/, '').nil? ? next : retry
-        rescue StandardError => err
-          STDERR.puts "Warning: Error loading #{file}:"
-          STDERR.puts err.message
-          STDERR.puts err.backtrace.join("\n"), ''
+          Padrino.dependency_paths.each { |path| Padrino.require_dependencies(path) }
+        rescue => err
+          STDERR.puts "Warning: Error loading Padrino.dependency_paths"
+          STDERR.puts err
         end
-      end
     end
   end
 end

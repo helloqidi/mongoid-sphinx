@@ -73,7 +73,7 @@ module Mongoid
         STDOUT.sync = true # Make sure we really stream..
 
         puts '<?xml version="1.0" encoding="utf-8"?>'
-        puts '<sphinx:docset>'
+        puts '<sphinx:docset xmlns:sphinx="http://www.redstore.cn/">'
 
         # Schema
         puts '<sphinx:schema>'

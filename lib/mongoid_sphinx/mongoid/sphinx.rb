@@ -120,6 +120,69 @@ module Mongoid
 
         puts '</sphinx:docset>'
       end
+      
+      #返回xml
+      def sphinx_xml
+	    require 'builder'
+		#缩进2
+		xml = Builder::XmlMarkup.new(:indent=>2)
+    	#生成<?xml version="1.0" encoding="UTF-8"?>
+		xml.instruct!
+
+		#docset--start
+		xml.sphinx(:docset,"xmlns:sphinx"=>"http://www.redstore.cn/") do
+
+		  #schema--start
+		  xml.sphinx(:schema) do
+			xml.sphinx(:field,"name"=>"classname")
+			self.search_fields.each do |name|
+			  xml.sphinx(:field,"name"=>name)
+			end
+			xml.sphinx(:attr,"name"=>"_id","type"=>"string")
+			xml.sphinx(:attr,"name"=>"classname","type"=>"string")
+        	self.search_attributes.each do |key, value|
+			  xml.sphinx(:attr,"name"=>key,"type"=>value)
+        	end
+		  end#schema--end
+
+		  #document--start
+		  self.all.each do |document|
+			sphinx_compatible_id = self.generate_id(document['_id'])
+			xml.sphinx(:document,"id"=>sphinx_compatible_id) do
+			  xml.classname(self.to_s)
+			  xml._id(document.send("_id"))
+			  self.search_fields.each do |key|
+				  if document.respond_to?(key.to_sym)
+					  value = document.send(key)
+					  value = value.join(",") if value.class == [].class
+					  #eval有危险
+					  #eval("xml.#{key}('#{value.to_s}')")
+					  #xml.method_missing(key,value.to_s)
+					  #去掉html标签
+					  xml.method_missing(key,value.to_s.gsub(/<\/?[^>]*>/, ""))
+				  end
+			  end
+			  self.search_attributes.each do |key, value|
+				  next if self.search_fields.include?(key)
+				  value = case value
+					  when 'bool'
+						  document.send(key) ? 1 : 0
+					  when 'timestamp'
+						  document.send(key).to_i
+					  else
+						  document.send(key)
+				  end
+				  value = value.join(",") if value.class == [].class
+				  xml.method_missing(key,value.to_s.gsub(/<\/?[^>]*>/, ""))
+			  end
+			end
+		  end#document--end
+
+		end#docset--end
+
+		return xml.target!
+	  end
+
 
       def search(query, options = {})
         client = MongoidSphinx::Configuration.instance.client

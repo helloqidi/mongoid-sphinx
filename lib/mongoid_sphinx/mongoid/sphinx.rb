@@ -71,35 +71,34 @@ module Mongoid
 
       def sphinx_stream
         STDOUT.sync = true # Make sure we really stream..
-        sphinx_string="";
 
-        sphinx_string+='<?xml version="1.0" encoding="utf-8"?>'
-        sphinx_string+='<sphinx:docset xmlns:sphinx="http://www.redstore.cn/">'
+        puts '<?xml version="1.0" encoding="utf-8"?>'
+        puts '<sphinx:docset xmlns:sphinx="http://www.redstore.cn/">'
 
         # Schema
-        sphinx_string+='<sphinx:schema>'
-        sphinx_string+='<sphinx:field name="classname"/>'
+        puts '<sphinx:schema>'
+        puts '<sphinx:field name="classname"/>'
         self.search_fields.each do |name|
-          sphinx_string+="<sphinx:field name=\"#{name}\"/>"
+          puts "<sphinx:field name=\"#{name}\"/>"
         end
-				sphinx_string+="<sphinx:attr name=\"_id\" type=\"string\" />"
-				sphinx_string+="<sphinx:attr name=\"classname\" type=\"string\" />"
+				puts "<sphinx:attr name=\"_id\" type=\"string\" />"
+				puts "<sphinx:attr name=\"classname\" type=\"string\" />"
         self.search_attributes.each do |key, value|
-          sphinx_string+="<sphinx:attr name=\"#{key}\" type=\"#{value}\" />"
+          puts "<sphinx:attr name=\"#{key}\" type=\"#{value}\" />"
         end
-        sphinx_string+='</sphinx:schema>'
+        puts '</sphinx:schema>'
 
         self.all.each do |document|
           sphinx_compatible_id = self.generate_id(document['_id'])
-					sphinx_string+="<sphinx:document id=\"#{sphinx_compatible_id}\">"
+					puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
 
-					sphinx_string+="<classname>#{self.to_s}</classname>"
-					sphinx_string+="<_id>#{document.send("_id")}</_id>"
+					puts "<classname>#{self.to_s}</classname>"
+					puts "<_id>#{document.send("_id")}</_id>"
 					self.search_fields.each do |key|
 						if document.respond_to?(key.to_sym)
 							value = document.send(key)
 							value = value.join(",") if value.class == [].class
-							sphinx_string+="<#{key}>#{value.to_s}</#{key}>"
+							puts "<#{key}>#{value.to_s}</#{key}>"
 						end
 					end
 					self.search_attributes.each do |key, value|
@@ -113,14 +112,13 @@ module Mongoid
 								document.send(key)
 						end
 						value = value.join(",") if value.class == [].class
-						sphinx_string+="<#{key}>#{value.to_s}</#{key}>"
+						puts "<#{key}>#{value.to_s}</#{key}>"
 					end
 
-					sphinx_string+='</sphinx:document>'
+					puts '</sphinx:document>'
         end
 
-        sphinx_string+='</sphinx:docset>'
-        return sphinx_string
+        puts '</sphinx:docset>'
       end
 
       def search(query, options = {})

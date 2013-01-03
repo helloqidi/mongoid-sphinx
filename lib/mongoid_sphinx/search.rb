@@ -74,7 +74,16 @@ module MongoidSphinx
       result = []
       groups.keys.each do |k|
         gids = groups[k].collect { |item| item[:id] }
-        result += eval("#{k}.find(#{gids})")
+		#find数组会应影响排序
+        #result += eval("#{k}.find(#{gids})")
+		tmp=[]
+		gids.each do |id|
+		  tmp_query=eval("#{k}.find('#{id}')")
+		  #处理整数型
+		  tmp_query=eval("#{k}.find(#{id})") if tmp_query.nil?
+		  tmp<<tmp_query
+		end
+		result += tmp
       end
       result
 		end
@@ -82,6 +91,11 @@ module MongoidSphinx
 		def method_missing(method, *args, &block)
 			to_a.send(method,*args,&block)
 		end
+
+	#总查询结果数
+	def total_found
+	  raw_result[:total_found]
+	end
 
   end
 end

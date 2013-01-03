@@ -44,16 +44,14 @@ module Mongoid
       end
 			
 			def generate_id(object_id)
-				@@exist_ids ||= []
-				id = object_id.to_s[0,8].hex
-				while true
-					if @@exist_ids.include? id
-						id += 1
-					else
-						break
-					end
+				#只支持两种类型的主键,且要保证转换后互相不能重复:BSON::ObjectId,Integer.
+				#BSON::ObjectId通过crc32转换为数字
+				if object_id.is_a?(BSON::ObjectId)
+				  id=object_id.to_s.to_crc32
+				else
+				  raise RuntimeError,"MongoidSphinx require Id must be BSON::ObjectId or Integer" if object_id.is_a?(Integer)==false
+				  id=object_id.to_s.to_crc32
 				end
-				@@exist_ids << id
 				return id
 			end
 
@@ -81,6 +79,12 @@ module Mongoid
         self.search_fields.each do |name|
           puts "<sphinx:field name=\"#{name}\"/>"
         end
+				#需要区分主键是否是Integer类型,必须用bigint,因为可能大于32bit.暂时不这样做,因为id类型不一致,会在使用MongoidSphinx.search时发生错误.
+				#if self.fields["_id"].type==Integer
+				#	puts "<sphinx:attr name=\"_id\" type=\"bigint\" />"
+				#else
+				#  	puts "<sphinx:attr name=\"_id\" type=\"string\" />"
+				#end
 				puts "<sphinx:attr name=\"_id\" type=\"string\" />"
 				puts "<sphinx:attr name=\"classname\" type=\"string\" />"
         self.search_attributes.each do |key, value|
@@ -122,10 +126,15 @@ module Mongoid
       end
       
       #返回xml
-      def sphinx_xml
+	  #file:写入到文件
+      def sphinx_xml(file=false)
 	    require 'builder'
-		#缩进2
-		xml = Builder::XmlMarkup.new(:indent=>2)
+		#如果是写入文件中
+		if file
+		  xml = Builder::XmlMarkup.new(:indent=>2,:target => file)
+		else
+		  xml = Builder::XmlMarkup.new(:indent=>2)
+		end
     	#生成<?xml version="1.0" encoding="UTF-8"?>
 		xml.instruct!
 
@@ -138,6 +147,12 @@ module Mongoid
 			self.search_fields.each do |name|
 			  xml.sphinx(:field,"name"=>name)
 			end
+			#需要区分主键是否是Integer类型,必须用bigint,因为可能大于32bit.暂时不这样做,因为id类型不一致,会在使用MongoidSphinx.search时发生错误.
+			#if self.fields["_id"].type==Integer
+			#	xml.sphinx(:attr,"name"=>"_id","type"=>"bigint")
+		  	#else
+			#	xml.sphinx(:attr,"name"=>"_id","type"=>"string")
+		  	#end
 			xml.sphinx(:attr,"name"=>"_id","type"=>"string")
 			xml.sphinx(:attr,"name"=>"classname","type"=>"string")
         	self.search_attributes.each do |key, value|
@@ -180,14 +195,20 @@ module Mongoid
 
 		end#docset--end
 
-		return xml.target!
+		#如果是写入文件中
+		if file
+		  return true
+		else
+		  return xml.target!
+		end
 	  end
 
 
       def search(query, options = {})
         client = MongoidSphinx::Configuration.instance.client
-
-        client.match_mode = options[:match_mode] || :extended
+		
+		#修改默认的匹配模式是extended2
+        client.match_mode = options[:match_mode] || :extended2
         client.offset = options[:offset].to_i if options.key?(:offset)
         client.limit = options[:limit].to_i if options.key?(:limit)
         client.limit = options[:per_page].to_i if options.key?(:per_page)
@@ -199,8 +220,20 @@ module Mongoid
         client.set_anchor(*options[:geo_anchor]) if options.key?(:geo_anchor)
 
         if options.key?(:sort_by)
+		  #注意,不是extended2
           client.sort_mode = :extended
           client.sort_by = options[:sort_by]
+        end
+
+		#增加字段权重
+		#field_weights = {'title' => 10, 'artist' => 10, 'description' => 5, 'search_words'=> 5}
+        if options.key?(:field_weights)
+          client.field_weights = options[:field_weights]
+        end
+
+		#增加评价模式的指定
+        if options.key?(:rank_mode)
+          client.rank_mode = options[:rank_mode]
         end
 
         if options.key?(:with)

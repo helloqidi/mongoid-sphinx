@@ -5,12 +5,12 @@ $:.unshift lib unless $:.include?(lib)
 require "mongoid_sphinx/version"
 
 Gem::Specification.new do |s|
-  s.name        = "mongoid-sphinx-huacnlee"
+  s.name        = "mongoid-sphinx-helloqidi"
   s.version     = MongoidSphinx::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Matt Hodgson"]
   s.email       = ["mhodgson@redbeard-tech.com"]
-  s.homepage    = "http://github.com/huacnlee/mongoid-sphinx"
+  s.homepage    = "http://github.com/helloqidi/mongoid-sphinx"
   s.summary     = "A full text indexing extension for MongoDB using Sphinx and Mongoid."
   s.description = "A full text indexing extension for MongoDB using Sphinx and Mongoid."
 

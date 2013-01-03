@@ -9,7 +9,7 @@ require 'mongoid_sphinx/search'
 require 'mongoid_sphinx/mongoid/identity'
 require 'mongoid_sphinx/mongoid/sphinx'
 require 'mongoid_sphinx/core/string'
-require 'mongoid_sphinx/railtie' if defined?(Rails)
+#require 'mongoid_sphinx/railtie' if defined?(Rails)
 
 module MongoidSphinx
 
